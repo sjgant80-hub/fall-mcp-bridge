@@ -1,0 +1,43 @@
+{
+  "name": "fall-mcp-bridge",
+  "version": "1.0.0",
+  "description": "Uniform MCP server in front of any local or remote LLM · ollama · llama.cpp · mlx · lmstudio · anthropic · openai · openrouter · femtollm · sovereign single-binary node",
+  "type": "module",
+  "bin": {
+    "fall-mcp-bridge": "./server.mjs"
+  },
+  "main": "server.mjs",
+  "scripts": {
+    "start": "node server.mjs",
+    "probe": "node server.mjs --probe",
+    "list": "node server.mjs --list"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "ollama",
+    "llama.cpp",
+    "mlx",
+    "lmstudio",
+    "anthropic",
+    "openai",
+    "openrouter",
+    "femtollm",
+    "sovereign",
+    "fall-estate"
+  ],
+  "author": "Simon Gant · sjgant80-hub",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sjgant80-hub/fall-mcp-bridge.git"
+  },
+  "homepage": "https://sjgant80-hub.github.io/fall-mcp-bridge/",
+  "prime": 593
+}

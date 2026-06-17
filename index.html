@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>◊ fall-mcp-bridge · the substrate-MCP wrapper</title>
+<meta name="description" content="One MCP server. Eight LLM adapters. Any MCP client can call any model. Provider lock-in dies here.">
+<meta name="prime" content="593">
+<style>
+:root{--void:#0b0a0f;--ink:#13121a;--line:#2a2934;--cream:#e6e1d6;--cream-dim:#a8a395;--cream-muted:#6e6a5e;--brass:#b8974a;--amber:#ff8c00;--ox:#8b1a1a;--green:#4ade80;--serif:Georgia,'Libre Baskerville',serif;--sans:'Inter',system-ui,sans-serif;--mono:'IBM Plex Mono','SF Mono',ui-monospace,Menlo,monospace}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{background:var(--void);color:var(--cream);font:14px/1.65 var(--sans);min-height:100vh;-webkit-font-smoothing:antialiased}
+main{max-width:880px;margin:0 auto;padding:32px 22px 80px}
+.brand{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+.brand .mark{width:42px;height:42px;background:linear-gradient(135deg,var(--brass),var(--amber));border-radius:6px;display:grid;place-items:center;font-family:var(--serif);font-weight:700;font-size:22px;color:var(--void)}
+.brand .name{font-family:var(--serif);font-weight:700;font-size:22px;letter-spacing:0.01em}
+.brand .seal{font-family:var(--mono);font-size:11px;color:var(--cream-muted);letter-spacing:0.18em;text-transform:uppercase}
+h1{font-family:var(--serif);font-size:34px;line-height:1.2;font-weight:700;margin:12px 0 14px;color:var(--cream)}
+h1 .accent{color:var(--amber);font-style:italic}
+.lede{font-size:17px;color:var(--cream-dim);max-width:720px;margin-bottom:32px;line-height:1.55}
+.lede strong{color:var(--cream)}
+.quote{border-left:3px solid var(--brass);padding:14px 18px;background:var(--ink);border-radius:3px;margin:18px 0 28px;font-style:italic;color:var(--cream-dim);font-size:14px}
+.quote .by{display:block;font-style:normal;color:var(--brass);font-family:var(--mono);font-size:11px;letter-spacing:0.08em;margin-top:8px;text-transform:uppercase}
+h2{font-family:var(--serif);font-size:18px;font-weight:700;margin:32px 0 12px;color:var(--cream);letter-spacing:0.01em}
+.adapters{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;margin:14px 0 24px}
+.adapter{background:var(--ink);border:1px solid var(--line);border-left:3px solid var(--brass);border-radius:3px;padding:10px 12px;font-size:12px}
+.adapter .n{font-family:var(--mono);font-weight:600;color:var(--amber);font-size:11px;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:4px}
+.adapter .d{color:var(--cream-dim);font-size:12px}
+pre{background:var(--ink);border:1px solid var(--line);border-radius:3px;padding:14px 18px;overflow-x:auto;font-family:var(--mono);font-size:12px;line-height:1.55;color:var(--cream);margin:8px 0 18px}
+code{font-family:var(--mono);font-size:13px;color:var(--amber);background:rgba(255,140,0,0.08);padding:1px 5px;border-radius:2px}
+pre code{background:none;padding:0;color:inherit;font-size:12px}
+a{color:var(--amber);text-decoration:none}
+a:hover{text-decoration:underline}
+.cta{display:flex;gap:10px;margin:24px 0;flex-wrap:wrap}
+.btn{display:inline-block;padding:10px 18px;border:1px solid var(--brass);border-radius:3px;color:var(--cream);font-size:13px;letter-spacing:0.02em}
+.btn:hover{border-color:var(--amber);color:var(--amber);text-decoration:none}
+.btn.primary{background:var(--amber);color:var(--void);border-color:var(--amber);font-weight:600}
+.btn.primary:hover{background:var(--brass);border-color:var(--brass);color:var(--void)}
+footer{margin-top:48px;padding-top:18px;border-top:1px solid var(--line);font-size:11px;color:var(--cream-muted);letter-spacing:0.05em}
+footer .seal{font-family:var(--mono);color:var(--brass);letter-spacing:0.16em;margin-top:6px}
+ul{padding-left:18px;color:var(--cream-dim)}
+ul li{margin-bottom:5px;font-size:14px}
+ul li strong{color:var(--cream)}
+</style>
+</head>
+<body>
+<main>
+
+<div class="brand">
+  <div class="mark">◊</div>
+  <div>
+    <div class="name">fall-mcp-bridge</div>
+    <div class="seal">v1 · prime 593 · MIT</div>
+  </div>
+</div>
+
+<h1>The substrate-MCP wrapper.<br><span class="accent">Provider lock-in dies here.</span></h1>
+
+<p class="lede">One MCP server. Eight LLM adapters. Any MCP client — Claude Code, Cursor, Cline, Windsurf, custom — can call any model — local or cloud — through the same interface. <strong>Survive any model deprecation. Mix tiers per call. Stay sovereign.</strong></p>
+
+<div class="quote">
+  "The reason you use claude is because you can't be bothered to figure out how to make an mcp server wrapper for any local model you run so you rely on claude code's library and agent architecture. Taking away Fable 5 didn't take away anything you didn't already take from yourself."
+  <span class="by">— Thomas Frumkin · 2026-06-12</span>
+</div>
+
+<p style="color:var(--cream-dim);margin-bottom:24px">He's right. The agent-runtime and the model are different things. The wrapper between them is ~300 lines of node. This is that wrapper.</p>
+
+<div class="cta">
+  <a class="btn primary" href="https://github.com/sjgant80-hub/fall-mcp-bridge">↗ source</a>
+  <a class="btn" href="https://github.com/sjgant80-hub/fall-mcp-bridge#install">install</a>
+  <a class="btn" href="https://github.com/sjgant80-hub/fall-mcp-bridge#configure">configure</a>
+</div>
+
+<h2>The 8 adapters</h2>
+
+<div class="adapters">
+  <div class="adapter"><div class="n">ollama</div><div class="d">local Ollama runtime · :11434</div></div>
+  <div class="adapter"><div class="n">llamacpp</div><div class="d">llama.cpp HTTP server · :8080</div></div>
+  <div class="adapter"><div class="n">mlx</div><div class="d">Apple Silicon MLX-LM · :8000</div></div>
+  <div class="adapter"><div class="n">lmstudio</div><div class="d">LM Studio local server · :1234</div></div>
+  <div class="adapter"><div class="n">anthropic</div><div class="d">Claude · BYOK</div></div>
+  <div class="adapter"><div class="n">openai</div><div class="d">GPT + OAI-compatible · BYOK</div></div>
+  <div class="adapter"><div class="n">openrouter</div><div class="d">100+ models · one BYOK</div></div>
+  <div class="adapter"><div class="n">femto</div><div class="d">Thomas's FemtoLLM cube · :1163</div></div>
+</div>
+
+<h2>The 3 MCP tools exposed</h2>
+
+<pre><code>complete({ model, prompt, system?, temperature?, max_tokens? })
+   → routes via config · returns { text, tier, model_used, latency_ms, tokens_in, tokens_out, fellBack }
+
+list_models()
+   → { ollama: [...], anthropic: [...], openrouter: [...], _routes: [...] }
+
+probe()
+   → { ollama: {ok:true}, femto: {ok:false}, anthropic: {ok:true}, ... }</code></pre>
+
+<h2>Wire it in (Claude Code)</h2>
+
+<pre><code>{
+  "mcpServers": {
+    "fall-bridge": {
+      "command": "node",
+      "args": ["/path/to/fall-mcp-bridge/server.mjs"],
+      "env": {
+        "FALL_MCP_ANTHROPIC_KEY": "sk-ant-…",
+        "FALL_MCP_OPENROUTER_KEY": "sk-or-…"
+      }
+    }
+  }
+}</code></pre>
+
+<p style="color:var(--cream-dim)">Same shape for Cursor, Cline, Windsurf — the bridge is stdio.</p>
+
+<h2>What this unlocks</h2>
+
+<ul>
+  <li><strong>Survive model deprecations.</strong> Fable 5 going away (or Sonnet 5 next year) is a config edit, not a code edit.</li>
+  <li><strong>Mix tiers per call.</strong> Cheap local for cheap calls; expensive cloud only when needed. Same agent.</li>
+  <li><strong>FemtoLLM first-class.</strong> Thomas's atomic intelligence unit is routable like any other model id.</li>
+  <li><strong>Per-domain fine-tunes.</strong> Train a small model for legal, accounting, 3D — route by id, no special integration.</li>
+  <li><strong>No SDK lock-in.</strong> Replace Claude Code with any MCP-capable client; your model layer survives.</li>
+</ul>
+
+<h2>Part of v20.3</h2>
+
+<p style="color:var(--cream-dim)">The bridge strengthens the §4 COMPUTE sovereignty layer · collapses si-didy's T2+T3 cascade rows into one MCP call (§6) · brings the FemtoLLM cube into the bridge's address space (§20) · is itself a wedge against model-provider lock-in (§21) · embodies the Init axiom 📐🦆 — whatever brain answered, the response IS init (§22).</p>
+
+<footer>
+  ⚒ part of the <a href="https://github.com/sjgant80-hub">fall* estate</a> · 101+ sovereign tools · MIT
+  <div class="seal">prime 593 · ◊·κ=1 · phi is home</div>
+</footer>
+
+</main>
+</body>
+</html>
