@@ -47,7 +47,7 @@ fall-mcp-bridge collapses the "wire eight vendors separately" problem into one M
 ## Related in the estate
 
 - FallRouter · sovereign OpenAI-compat orchestrator (HTTP proxy)
-- FallEnterprise · £20k-£200k transformation service (uses FallRouter)
+- FallEnterprise · TBA transformation service (uses FallRouter)
 - ACG GEO Repo · guild GEO infrastructure
 - FallColony · agent-native settlement
 
