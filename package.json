@@ -10,7 +10,8 @@
   "scripts": {
     "start": "node server.mjs",
     "probe": "node server.mjs --probe",
-    "list": "node server.mjs --list"
+    "list": "node server.mjs --list",
+    "test": "node --test"
   },
   "engines": {
     "node": ">=18.0.0"

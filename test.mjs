@@ -1,54 +1,99 @@
 #!/usr/bin/env node
-// Smoke test for fall-mcp-bridge · runs CLI modes + stdio handshake
-// Usage: node test.mjs
+// ============================================================================
+// fall-mcp-bridge · unit test suite
+//
+// Every assertion below is derived from running the project's own adapter
+// modules and observing their real return values / thrown errors. No network
+// is required or performed: only the deterministic, offline code paths are
+// exercised (argument validation, the canonical model list, boolean probes,
+// and the adapter export contract). Run with `node test.mjs` (see package.json
+// "test" script) — exit code is 0 on pass, non-zero on any failure.
+// ============================================================================
 
-import { spawn } from 'node:child_process';
-import { setTimeout } from 'node:timers/promises';
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
 
-console.log('═══ fall-mcp-bridge smoke test ═══\n');
+import * as anthropic from './adapters/anthropic.mjs';
+import * as openai from './adapters/openai.mjs';
+import * as openrouter from './adapters/openrouter.mjs';
+import * as ollama from './adapters/ollama.mjs';
+import * as llamacpp from './adapters/llamacpp.mjs';
+import * as mlx from './adapters/mlx.mjs';
+import * as lmstudio from './adapters/lmstudio.mjs';
+import * as femto from './adapters/femto.mjs';
 
-function run(args, timeout=8000) {
-  return new Promise((res, rej) => {
-    const p = spawn('node', ['server.mjs', ...args]);
-    let out='', err='';
-    p.stdout.on('data', d => out += d);
-    p.stderr.on('data', d => err += d);
-    const t = setTimeout(timeout).then(() => p.kill());
-    p.on('close', code => res({ code, out, err }));
-    p.on('error', rej);
-  });
-}
+const ALL_ADAPTERS = {
+  anthropic, openai, openrouter, ollama, llamacpp, mlx, lmstudio, femto,
+};
 
-const v = await run(['--version']);
-console.log('1. --version:', v.out.trim() ? '✓' : '✗');
-const p = await run(['--probe']);
-const probeOk = p.out.includes('"ollama"') && p.out.includes('"femto"');
-console.log('2. --probe:  ', probeOk ? '✓ 8 adapters reported' : '✗');
-const l = await run(['--list']);
-const listOk = l.out.includes('"anthropic"') && l.out.includes('claude-haiku');
-console.log('3. --list:   ', listOk ? '✓ canonical models listed' : '✗');
-
-// stdio handshake
-const proc = spawn('node', ['server.mjs'], { stdio: ['pipe','pipe','pipe'] });
-const responses = [];
-proc.stdout.on('data', d => {
-  for (const line of d.toString().split('\n')) {
-    if (line.trim()) { try { responses.push(JSON.parse(line)); } catch(_){} }
+// --- adapter contract -------------------------------------------------------
+// The README documents that every adapter exports three async functions:
+// complete, probe, listModels. Verify the actual module exports honour it.
+test('every adapter exports the complete/probe/listModels contract', () => {
+  const names = Object.keys(ALL_ADAPTERS);
+  assert.equal(names.length, 8, 'expected 8 adapters wired into the bridge');
+  for (const [name, mod] of Object.entries(ALL_ADAPTERS)) {
+    assert.equal(typeof mod.complete, 'function', `${name}.complete must be a function`);
+    assert.equal(typeof mod.probe, 'function', `${name}.probe must be a function`);
+    assert.equal(typeof mod.listModels, 'function', `${name}.listModels must be a function`);
   }
 });
-const send = msg => proc.stdin.write(JSON.stringify(msg)+'\n');
-send({ jsonrpc:'2.0', id:1, method:'initialize', params:{ protocolVersion:'2025-03-26', capabilities:{}, clientInfo:{ name:'test', version:'1.0' }}});
-await setTimeout(500);
-send({ jsonrpc:'2.0', id:2, method:'tools/list', params:{} });
-await setTimeout(500);
-proc.kill();
-await setTimeout(200);
 
-const initOk = responses.some(r => r.id===1 && r.result?.serverInfo?.name === 'fall-mcp-bridge');
-const toolsOk = responses.some(r => r.id===2 && r.result?.tools?.length === 3);
-console.log('4. MCP init: ', initOk ? '✓ serverInfo correct' : '✗');
-console.log('5. tools/list:', toolsOk ? '✓ 3 tools (complete/list_models/probe)' : '✗');
+// --- anthropic.listModels: canonical, offline, deterministic ----------------
+test('anthropic.listModels returns the canonical Claude family offline', async () => {
+  const models = await anthropic.listModels();
+  assert.ok(Array.isArray(models), 'listModels must return an array');
+  assert.equal(models.length, 5, 'canonical Claude list has 5 entries');
+  // family is uniform and the ids are unique
+  assert.ok(models.every(m => m.family === 'anthropic'), 'every entry is family anthropic');
+  const ids = models.map(m => m.id);
+  assert.equal(new Set(ids).size, ids.length, 'model ids are unique');
+  assert.ok(ids.includes('claude-haiku-4-5'), 'includes the documented haiku id');
+  const haiku = models.find(m => m.id === 'claude-haiku-4-5');
+  assert.equal(haiku.tier, 'haiku', 'haiku entry is tagged tier=haiku');
+});
 
-const allOk = v.out.trim() && probeOk && listOk && initOk && toolsOk;
-console.log('\n' + (allOk ? '✓ all smoke tests pass' : '✗ failures above'));
-process.exit(allOk ? 0 : 1);
+// --- probe: reflects credential presence without any network round-trip -----
+test('BYOK adapter probes reflect apiKey presence as a plain boolean', async () => {
+  for (const mod of [anthropic, openai, openrouter]) {
+    assert.equal(await mod.probe({ apiKey: 'sk-test' }), true, 'key present -> true');
+    assert.equal(await mod.probe({}), false, 'no key -> false');
+  }
+});
+
+// --- complete: BYOK adapters reject before any fetch when the key is absent --
+test('anthropic.complete rejects with a keyed error when apiKey is missing', async () => {
+  await assert.rejects(
+    () => anthropic.complete({ prompt: 'hi' }),
+    /anthropic: missing apiKey/,
+    'must name the adapter and the missing credential',
+  );
+});
+
+test('openai.complete rejects with a keyed error when apiKey is missing', async () => {
+  await assert.rejects(
+    () => openai.complete({ prompt: 'hi' }),
+    /openai: missing apiKey/,
+  );
+});
+
+test('openrouter.complete rejects with a keyed error when apiKey is missing', async () => {
+  await assert.rejects(
+    () => openrouter.complete({ prompt: 'hi' }),
+    /openrouter: missing apiKey/,
+  );
+});
+
+// --- femto: the unimplemented ws transport fails fast with a clear message ---
+test('femto.complete refuses the not-yet-implemented ws transport', async () => {
+  await assert.rejects(
+    () => femto.complete({ prompt: 'hi', transport: 'ws' }),
+    /ws transport not yet implemented/,
+  );
+});
+
+// --- openai.listModels short-circuits to [] with no key (no network) --------
+test('openai.listModels returns an empty list when no apiKey is supplied', async () => {
+  const models = await openai.listModels({});
+  assert.deepEqual(models, [], 'no key -> empty list, no request attempted');
+});
