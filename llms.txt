@@ -67,4 +67,4 @@ Anyone can fork DIRECT from Thomas Frumkin (Gen-0 substrate · Konomi + fold-mat
 
 Doctrine mints on the KCC ledger: https://sjgant80-hub.github.io/fallcolony/mints/doctrine-mints.json
 
-MIT · ◊·κ=1
+MIT

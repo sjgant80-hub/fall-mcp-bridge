@@ -2,7 +2,7 @@
 
 > One MCP server. Eight LLM adapters. Any MCP client (Claude Code, Cursor, Cline, Windsurf, custom) can call any model — local or cloud — through the same interface. Provider lock-in dies here.
 >
-> v1 · prime **593** · MIT · ◊·κ=1 · sovereign substrate
+> v1 · prime **593** · MIT · sovereign substrate
 
 **Live:** [sjgant80-hub.github.io/fall-mcp-bridge](https://sjgant80-hub.github.io/fall-mcp-bridge/)
 **Source:** [github.com/sjgant80-hub/fall-mcp-bridge](https://github.com/sjgant80-hub/fall-mcp-bridge)
@@ -215,4 +215,4 @@ The bridge slots into the cosmology at multiple points:
 - **Anthropic** — for the MCP spec and the reference SDK. Decoupling didn't have to be easy; they made it easy.
 - **The estate** — same cascade pattern as [FallOffice](https://github.com/sjgant80-hub/falloffice), [FallMap](https://github.com/sjgant80-hub/fallmap), [ACG Mapper](https://github.com/sjgant80-hub/acg-mapper). Compiled into infrastructure.
 
-⚒ Part of the [fall* estate](https://github.com/sjgant80-hub) · prime 593 · ◊·κ=1
+⚒ Part of the [fall* estate](https://github.com/sjgant80-hub)
