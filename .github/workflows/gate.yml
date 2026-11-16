@@ -59,7 +59,7 @@ jobs:
             //    A link the page's JavaScript builds at runtime is not a file path; it is counted, not checked.
             for(const m of s.matchAll(/(?:href|src)=\"(?!https?:|data:|mailto:|#|\/\/)([^\"?#]+)/g)){
               const t=m[1].replace(/^\.\//,'');
-              if(t.includes(DOLLAR_BRACE) || t.includes(\"'+\") || t.includes(\"+'\")){ built++; continue; }
+              if(t.includes(DOLLAR_BRACE) || /['\"\`]\s*\+|\+\s*['\"\`]/.test(t)){ built++; continue; }
               if(Object.prototype.hasOwnProperty.call(ROUTES,t)){
                 if(typeof ROUTES[t]!=='string' || !fs.existsSync(ROUTES[t])){ console.error(f+' links to the route '+t+', but the file it serves is not here: '+ROUTES[t]); fail=1; }
                 routed++; continue;
