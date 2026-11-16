@@ -14,6 +14,9 @@ name: gate
 #   · a link the page's own JavaScript builds at runtime (${...} or '+...+') is not a file path, so it
 #     cannot be checked here; it is skipped and COUNTED in the verdict, never silently passed
 #   · actions are pinned to full commit SHAs (some repos require it, and it is the safer default)
+#   · a page served by its own local server may link a server ROUTE (e.g. /dashboard). The repo declares each
+#     route and the file it serves in .gate-routes.json; the gate then checks that file exists instead
+#     (a route whose file is missing still fails). No file, no routes: every link is checked as a file.
 on: [push, pull_request, workflow_dispatch]
 jobs:
   page:
@@ -28,8 +31,13 @@ jobs:
           const fs=require('fs'), path=require('path');
           const html=fs.readdirSync('.').filter(f=>f.endsWith('.html'));
           if(!html.length){ console.error('no HTML in this repo — nothing to serve'); process.exit(1); }
-          let fail=0, built=0;
+          let fail=0, built=0, routed=0;
           const DOLLAR_BRACE=String.fromCharCode(36,123);
+          let ROUTES={};
+          if(fs.existsSync('.gate-routes.json')){
+            try { ROUTES=JSON.parse(fs.readFileSync('.gate-routes.json','utf8')); } catch(e){ console.error('.gate-routes.json does not parse: '+e.message); fail=1; }
+            if(!ROUTES || typeof ROUTES!=='object' || Array.isArray(ROUTES)){ console.error('.gate-routes.json must map each route to the file it serves'); ROUTES={}; fail=1; }
+          }
           for(const f of html){
             const s=fs.readFileSync(f,'utf8');
 
@@ -52,6 +60,10 @@ jobs:
             for(const m of s.matchAll(/(?:href|src)=\"(?!https?:|data:|mailto:|#|\/\/)([^\"?#]+)/g)){
               const t=m[1].replace(/^\.\//,'');
               if(t.includes(DOLLAR_BRACE) || t.includes(\"'+\") || t.includes(\"+'\")){ built++; continue; }
+              if(Object.prototype.hasOwnProperty.call(ROUTES,t)){
+                if(typeof ROUTES[t]!=='string' || !fs.existsSync(ROUTES[t])){ console.error(f+' links to the route '+t+', but the file it serves is not here: '+ROUTES[t]); fail=1; }
+                routed++; continue;
+              }
               if(t && !fs.existsSync(t)){ console.error(f+' links to a file that is not here: '+t); fail=1; }
             }
           }
@@ -66,5 +78,6 @@ jobs:
 
           if(fail){ console.error('\nPAGE GATE FAILED'); process.exit(1); }
           console.log('page gate clean — '+html.length+' page(s): scripts parse, no placeholders, no dead same-repo links, no committed keys'
-            +(built?' ('+built+' link(s) built at runtime by the page script, not checkable here)':''));
+            +(built?' ('+built+' link(s) built at runtime by the page script, not checkable here)':'')
+            +(routed?' ('+routed+' server route(s), each checked against the file it serves)':''));
           "
